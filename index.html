@@ -3,732 +3,806 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gaming MC — Survival Multiplayer</title>
+<title>Gaming MC — Rank Store</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --void:#0a0a0d;
-    --panel:#1c1c22;
-    --slot:#2b2b33;
-    --slot-light:#3c3c46;
-    --xp:#5fd93a;
-    --xp-dark:#3d9e21;
-    --redstone:#ff2f2f;
-    --gold:#ffd53d;
-    --aqua:#3bf7ff;
-    --parchment:#e8dfc8;
-    --stone:#8b8b8b;
-    --grass:#5b9e34;
-    --dirt:#6b4a35;
-    --ink:#0d0d0f;
+    --bg:#161310;
+    --bg-2:#1d1913;
+    --panel:#242019;
+    --panel-edge:#332c22;
+    --text:#efe9db;
+    --muted:#a89d87;
+    --muted-2:#786d5b;
+
+    --king:#f2b705;
+    --king-deep:#7a5602;
+    --king-glow:#3d2c05;
+
+    --god:#8b6bf0;
+    --god-deep:#4b2f9e;
+    --god-glow:#2a1a4d;
+    --god-bolt:#ffe066;
+
+    --vip:#54c7e8;
+    --vip-deep:#1f6f8a;
+    --vip-glow:#123640;
+
+    --dead:#d3453a;
+    --dead-deep:#6e1a15;
+    --dead-glow:#241110;
   }
 
-  *{ box-sizing:border-box; margin:0; padding:0; }
-  html{ scroll-behavior:smooth; }
-
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
   body{
-    background:var(--void);
-    color:var(--parchment);
-    font-family:'Space Grotesk', sans-serif;
-    overflow-x:hidden;
-    cursor:none;
-  }
-  @media (max-width:900px){ body{ cursor:auto; } }
-
-  .pixel{ font-family:'Press Start 2P', monospace; }
-  .mono{ font-family:'JetBrains Mono', monospace; }
-  a{ color:inherit; text-decoration:none; }
-  ::selection{ background:var(--xp); color:var(--ink); }
-
-  /* ================= SCANLINE / VIGNETTE ================= */
-  .crt{
-    position:fixed; inset:0; z-index:9990; pointer-events:none;
-    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0.09) 0px, rgba(0,0,0,0.09) 1px, transparent 1px, transparent 3px);
-    mix-blend-mode:multiply;
-  }
-  .vignette{
-    position:fixed; inset:0; z-index:9991; pointer-events:none;
-    box-shadow:inset 0 0 160px rgba(0,0,0,0.65);
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
   }
 
-  /* ================= LOADER ================= */
-  #loader{
-    position:fixed; inset:0; z-index:20000;
-    background:var(--void);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:22px;
-    transition:opacity 0.6s ease, visibility 0.6s ease;
-  }
-  #loader.hide{ opacity:0; visibility:hidden; }
-  .loader-title{
-    font-size:1.3rem;
-    color:var(--parchment);
-    letter-spacing:2px;
-    text-align:center;
-  }
-  .loader-bar-frame{
-    width:340px; max-width:80vw;
-    height:22px;
-    background:var(--slot);
-    border:3px solid var(--ink);
-    box-shadow:inset -3px -3px 0 rgba(0,0,0,0.4), inset 3px 3px 0 rgba(255,255,255,0.06);
-    padding:3px;
-  }
-  .loader-bar-fill{
-    height:100%; width:0%;
-    background:repeating-linear-gradient(90deg, var(--xp) 0 8px, var(--xp-dark) 8px 16px);
-    transition:width 0.15s linear;
-  }
-  .loader-tip{
-    font-size:0.7rem;
-    color:var(--stone);
-    max-width:340px;
-    text-align:center;
-    min-height:2.4em;
+  .pixel{
+    font-family:'Press Start 2P', monospace;
+    line-height:1.7;
   }
 
-  /* ================= XP SCROLL BAR ================= */
-  #xpbar{
-    position:fixed; top:0; left:0; right:0; height:8px; z-index:9000;
-    background:var(--slot);
-    border-bottom:2px solid var(--ink);
-  }
-  #xpfill{
-    height:100%; width:0%;
-    background:linear-gradient(90deg, var(--xp), var(--xp-dark));
-    box-shadow:0 0 8px var(--xp);
-    transition:width 0.1s linear;
-  }
-  #levelBubble{
-    position:fixed; top:10px; left:0; z-index:9001;
-    transform:translateX(-50%);
-    background:var(--ink);
-    border:2px solid var(--xp);
-    color:var(--xp);
-    font-size:0.6rem;
-    padding:3px 7px;
-    white-space:nowrap;
-    transition:left 0.1s linear;
-  }
-  @media (max-width:700px){ #levelBubble{ display:none; } }
+  a{color:inherit;}
 
-  /* ================= CURSOR ================= */
-  .cursor-block{
-    position:fixed; width:16px; height:16px;
-    background:var(--gold); border:2px solid var(--ink);
-    pointer-events:none; z-index:9999;
-    transform:translate(-50%,-50%);
-    box-shadow:2px 2px 0 rgba(0,0,0,0.5);
+  /* subtle voxel-grid texture used behind sections */
+  .grid-bg{
+    background-image:
+      linear-gradient(var(--bg-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-2) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: -1px -1px;
   }
-  @media (max-width:900px){ .cursor-block{ display:none; } }
 
-  /* ================= JOIN LOG (top-left HUD chat) ================= */
-  #joinlog{
-    position:fixed; top:26px; left:20px; z-index:50;
-    font-size:0.78rem;
-    display:flex; flex-direction:column; gap:3px;
-    text-shadow:1px 1px 2px rgba(0,0,0,0.8);
-    opacity:0.9;
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 24px;
   }
-  #joinlog span{ opacity:0; color:var(--xp); }
-  #joinlog span.show{ opacity:0.9; animation:fade-log 6s forwards; }
-  @keyframes fade-log{ 0%{opacity:0.9;} 80%{opacity:0.9;} 100%{opacity:0;} }
 
-  @media (max-width:700px){ #joinlog{ display:none; } }
-
-  /* ================= TOASTS ================= */
-  .toast-stack{
-    position:fixed; top:50px; right:16px; z-index:10000;
-    display:flex; flex-direction:column; gap:8px; align-items:flex-end;
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:20;
+    background:rgba(22,19,16,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom:2px solid var(--panel-edge);
   }
-  .toast{
-    background:var(--ink); border:2px solid var(--gold); color:var(--parchment);
-    padding:9px 14px 9px 10px; display:flex; align-items:center; gap:10px;
-    min-width:210px; font-size:0.78rem;
-    box-shadow:4px 4px 0 rgba(0,0,0,0.6);
-    animation:toast-in 0.3s ease, toast-out 0.35s ease 3s forwards;
+  nav .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:16px; padding-bottom:16px;
   }
-  .toast .icon{ width:22px; height:22px; background:var(--gold); border:2px solid var(--ink); flex-shrink:0; }
-  .toast b{ display:block; color:var(--gold); font-size:0.62rem; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:2px; }
-  @keyframes toast-in{ from{ transform:translateX(120%); opacity:0; } to{ transform:translateX(0); opacity:1; } }
-  @keyframes toast-out{ to{ transform:translateX(120%); opacity:0; } }
-  @media (max-width:700px){ .toast-stack{ top:auto; bottom:96px; left:12px; right:12px; align-items:stretch; } .toast{ min-width:auto; } }
+  .brand{
+    display:flex; align-items:center; gap:12px;
+    font-size:13px; letter-spacing:1px;
+  }
+  .brand-block{
+    width:26px; height:26px;
+    background:linear-gradient(135deg, var(--king) 0%, var(--king-deep) 100%);
+    border:2px solid #0000;
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 4px 4px 0 rgba(255,255,255,.15);
+  }
+  .nav-links{ display:flex; gap:28px; font-size:14px; font-weight:600; color:var(--muted);}
+  .nav-links a:hover{ color:var(--text); }
+  .nav-cta{
+    background:var(--king);
+    color:#1c1300;
+    padding:10px 18px;
+    font-weight:700;
+    font-size:14px;
+    border:2px solid var(--king-deep);
+    box-shadow: 3px 3px 0 var(--king-deep);
+    text-decoration:none;
+  }
+  .nav-cta:hover{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--king-deep); }
 
-  /* ================= PARTICLES ================= */
-  .particle{ position:fixed; width:10px; height:10px; pointer-events:none; z-index:9998; border:1px solid rgba(0,0,0,0.3); }
-  @keyframes pop-fly{ 0%{ transform:translate(0,0) rotate(0) scale(1); opacity:1; } 100%{ transform:var(--fly) rotate(360deg) scale(0.3); opacity:0; } }
-
-  /* ================= HERO ================= */
-  .hero{
-    position:relative; height:100vh; min-height:680px;
-    display:flex; flex-direction:column; justify-content:flex-end;
+  /* ---------- MARQUEE TICKER ---------- */
+  .ticker{
+    background:linear-gradient(90deg, var(--king-deep), var(--god-deep), var(--vip-deep), var(--dead-deep), var(--king-deep));
+    background-size:400% 100%;
+    animation: tickerbg 10s linear infinite;
     overflow:hidden;
-    transition:filter 0.6s ease;
+    border-bottom:2px solid var(--panel-edge);
   }
-  .hero.day{ background:linear-gradient(to bottom, #7ec8e3 0%, #eef0c9 60%, #eef0c9 100%); }
-  .hero.night{ background:linear-gradient(to bottom, #070d14 0%, #101c28 55%, #182838 100%); }
-
-  .celestial{ position:absolute; width:60px; height:60px; top:14%; right:14%; }
-  .sun{ background:#ffe08a; border:3px solid var(--ink); box-shadow:inset -8px -8px 0 rgba(0,0,0,0.08), 0 0 0 6px rgba(255,224,138,0.25); }
-  .moon{ background:#e7e9ee; border:3px solid var(--ink); box-shadow:inset 10px -6px 0 rgba(0,0,0,0.18); }
-
-  .stars{ position:absolute; inset:0; opacity:0; transition:opacity 0.6s; pointer-events:none; }
-  .hero.night .stars{ opacity:1; }
-  .star{ position:absolute; width:3px; height:3px; background:#fff; }
-
-  .day-toggle{
-    position:absolute; top:70px; right:20px; z-index:10;
-    display:flex; align-items:center; gap:8px;
-    background:var(--panel); border:2px solid var(--ink);
-    padding:8px 12px; font-size:0.68rem; cursor:pointer; user-select:none;
-    box-shadow:3px 3px 0 rgba(0,0,0,0.4);
+  @keyframes tickerbg{
+    0%{ background-position:0% 0; }
+    100%{ background-position:400% 0; }
   }
-  .lever{ width:26px; height:14px; background:var(--slot); position:relative; border:1px solid var(--ink); }
-  .lever::after{ content:""; position:absolute; top:1px; left:1px; width:10px; height:10px; background:var(--gold); transition:left 0.2s; }
-  .hero.night .lever::after{ left:15px; background:#c9ccd6; }
-  @media (max-width:800px){ .day-toggle{ top:auto; bottom:210px; right:12px; } }
+  .ticker-track{
+    display:flex;
+    white-space:nowrap;
+    animation: scroll-left 22s linear infinite;
+    width:max-content;
+  }
+  @keyframes scroll-left{
+    0%{ transform:translateX(0); }
+    100%{ transform:translateX(-50%); }
+  }
+  .ticker-track span{
+    padding:9px 34px;
+    font-size:13px;
+    font-weight:800;
+    color:#fff;
+    letter-spacing:.5px;
+    text-shadow:0 1px 2px rgba(0,0,0,.5);
+  }
 
-  .terrain{ position:relative; width:100%; height:34%; display:flex; align-items:flex-end; z-index:2; }
-  .col{ flex:1; background:linear-gradient(to bottom, var(--grass) 0 18px, var(--dirt) 18px 100%); border-top:3px solid rgba(0,0,0,0.2); position:relative; }
-  .hero.night .col{ filter:brightness(0.4) saturate(0.8); }
-  .tree{ position:absolute; top:-44px; left:50%; transform:translateX(-50%); width:20px; }
-  .tree .trunk{ width:6px; height:14px; background:#5a3d24; margin:0 auto; }
-  .tree .leaves{ width:20px; height:20px; background:#3d7326; margin-top:-4px; }
-
-  .tnt{ position:absolute; width:22px; height:22px; background:repeating-linear-gradient(45deg, #c0392b 0 4px, #922b21 4px 8px); border:2px solid var(--ink); z-index:4; animation:fall linear forwards; }
-  @keyframes fall{ from{ transform:translateY(-40px) rotate(0); } to{ transform:translateY(110vh) rotate(360deg); } }
-
-  .hero-content{ position:absolute; left:32px; bottom:40%; z-index:5; max-width:640px; }
-  @media (max-width:800px){ .hero-content{ left:18px; right:18px; bottom:42%; } }
-
-  .eyebrow{ display:inline-block; background:var(--ink); color:var(--gold); font-size:0.62rem; letter-spacing:0.1em; padding:6px 10px; margin-bottom:16px; }
-
-  .glitch-title{
-    font-size:clamp(2.4rem, 7vw, 5rem);
-    color:var(--ink);
-    line-height:0.95;
+  /* ---------- HERO ---------- */
+  header.hero{
+    padding:96px 0 88px;
+    text-align:center;
     position:relative;
-    text-shadow:2px 2px 0 rgba(255,255,255,0.25);
-    text-transform:uppercase;
-    letter-spacing:0.01em;
+    overflow:hidden;
   }
-  .hero.night .glitch-title{ color:var(--parchment); text-shadow:2px 2px 0 rgba(0,0,0,0.4); }
-  .glitch-title.glitching::before, .glitch-title.glitching::after{
-    content:"GAMING MC"; position:absolute; left:0; top:0; width:100%; overflow:hidden;
+  header.hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(242,183,5,0.08), transparent 40%),
+      radial-gradient(circle at 80% 30%, rgba(139,107,240,0.10), transparent 40%),
+      radial-gradient(circle at 50% 90%, rgba(84,199,232,0.08), transparent 45%);
+    pointer-events:none;
+    animation: drift 12s ease-in-out infinite alternate;
   }
-  .glitch-title.glitching::before{ color:var(--redstone); clip-path:inset(0 0 60% 0); transform:translate(-4px,-2px); mix-blend-mode:screen; }
-  .glitch-title.glitching::after{ color:var(--aqua); clip-path:inset(40% 0 0 0); transform:translate(4px,2px); mix-blend-mode:screen; }
+  @keyframes drift{
+    0%{ transform: translate3d(0,0,0) scale(1); }
+    100%{ transform: translate3d(0,-14px,0) scale(1.04); }
+  }
 
-  .tagline{ margin-top:16px; font-size:1.05rem; font-weight:500; color:var(--ink); max-width:440px; }
-  .hero.night .tagline{ color:var(--parchment); }
+  .floaters{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .floaters span{
+    position:absolute;
+    width:14px; height:14px;
+    opacity:.85;
+    animation: floatUp linear infinite;
+    box-shadow: 0 0 12px currentColor;
+  }
+  @keyframes floatUp{
+    0%{ transform: translateY(0) rotate(0deg); opacity:0; }
+    10%{ opacity:.85; }
+    90%{ opacity:.85; }
+    100%{ transform: translateY(-560px) rotate(90deg); opacity:0; }
+  }
 
-  .ip-row{ margin-top:24px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
-  .ip-box{ background:var(--ink); color:var(--parchment); padding:11px 16px; font-size:0.92rem; border:2px solid var(--ink); display:flex; align-items:center; gap:10px; }
-  .ip-box button{ background:var(--gold); color:var(--ink); border:none; font-family:inherit; font-weight:700; font-size:0.72rem; padding:5px 9px; cursor:pointer; }
-  .ip-box button:hover{ background:#fff; }
+  header.hero::after{
+    content:"";
+    position:absolute;
+    top:50%; left:50%;
+    width:900px; height:900px;
+    transform:translate(-50%,-50%);
+    background: conic-gradient(from 0deg, var(--king), var(--god), var(--vip), var(--dead), var(--king));
+    opacity:.10;
+    filter:blur(60px);
+    animation: spin 14s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes spin{
+    from{ transform:translate(-50%,-50%) rotate(0deg); }
+    to{ transform:translate(-50%,-50%) rotate(360deg); }
+  }
 
-  .mc-btn{
-    background:var(--slot-light);
-    color:var(--parchment);
-    border:2px solid var(--ink);
-    padding:13px 22px;
-    font-size:0.85rem;
+  .hero-inner{ position:relative; }
+  .hero h1{
+    font-size:clamp(32px, 6vw, 56px);
+    margin:0 0 20px;
+    letter-spacing:2px;
+  }
+  .hero h1 .g{
+    background:linear-gradient(90deg, var(--king), var(--god), var(--vip), var(--dead), var(--king));
+    background-size:300% 100%;
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    animation: rainbow 5s linear infinite;
+  }
+  @keyframes rainbow{
+    0%{ background-position:0% 50%; }
+    100%{ background-position:300% 50%; }
+  }
+
+  /* ---------- IP BOX ---------- */
+  .ip-row{
+    display:flex;
+    gap:16px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-bottom:30px;
+  }
+  .ip-box{
+    display:inline-flex;
+    align-items:center;
+    gap:14px;
+    margin:0;
+    background:var(--panel);
+    border:2px solid var(--king);
+    padding:14px 16px 14px 20px;
+    box-shadow:4px 4px 0 var(--king-glow), 0 0 22px rgba(242,183,5,.35);
+    animation: ipglow 2.2s ease-in-out infinite;
+  }
+  .ip-box.bedrock-box{
+    border-color:var(--god);
+    box-shadow:4px 4px 0 var(--god-glow), 0 0 22px rgba(139,107,240,.35);
+    animation: ipglowbedrock 2.2s ease-in-out infinite;
+  }
+  @keyframes ipglowbedrock{
+    0%,100%{ box-shadow:4px 4px 0 var(--god-glow), 0 0 14px rgba(139,107,240,.28); }
+    50%{ box-shadow:4px 4px 0 var(--god-glow), 0 0 30px rgba(139,107,240,.6); }
+  }
+  @keyframes ipglow{
+    0%,100%{ box-shadow:4px 4px 0 var(--king-glow), 0 0 14px rgba(242,183,5,.28); }
+    50%{ box-shadow:4px 4px 0 var(--king-glow), 0 0 30px rgba(242,183,5,.6); }
+  }
+  .ip-box .ip-label{
+    font-size:10.5px;
+    color:var(--muted-2);
+    letter-spacing:1px;
+    display:block;
+    margin-bottom:4px;
+    font-family:'Press Start 2P', monospace;
+  }
+  .ip-box .ip-text{
+    font-size:16px;
+    font-weight:700;
+    color:var(--king);
+    letter-spacing:.5px;
+    display:block;
+  }
+  .bedrock-box .ip-text{ color:var(--god); }
+  .ip-box .ip-port{
+    font-size:13px;
     font-weight:600;
-    box-shadow:inset -3px -3px 0 rgba(0,0,0,0.35), inset 3px 3px 0 rgba(255,255,255,0.12), 3px 3px 0 rgba(0,0,0,0.4);
-    cursor:pointer;
-    transition:filter 0.15s, transform 0.1s;
+    margin-top:2px;
+    opacity:.85;
   }
-  .mc-btn:hover{ filter:brightness(1.25); }
-  .mc-btn:active{ transform:translateY(2px); box-shadow:inset -3px -3px 0 rgba(0,0,0,0.35), inset 3px 3px 0 rgba(255,255,255,0.12); }
-  .mc-btn.primary{ background:var(--xp-dark); }
-  .mc-btn.primary:hover{ filter:brightness(1.3); }
-
-  /* ================= HUD STAT BARS (hearts/hunger) ================= */
-  .hud-stats{ display:flex; gap:26px; margin-top:26px; flex-wrap:wrap; }
-  .hud-stat{ display:flex; flex-direction:column; gap:6px; }
-  .hud-stat .hud-label{ font-size:0.6rem; letter-spacing:0.08em; color:var(--ink); opacity:0.75; }
-  .hero.night .hud-stat .hud-label{ color:var(--parchment); }
-  .icon-row{ display:flex; gap:3px; }
-  .heart, .drum{ width:16px; height:16px; border:2px solid var(--ink); }
-  .heart{ background:var(--redstone); clip-path:polygon(50% 15%, 61% 5%, 78% 5%, 92% 20%, 92% 38%, 50% 90%, 8% 38%, 8% 20%, 22% 5%, 39% 5%); }
-  .drum{ background:var(--gold); border-radius:2px; }
-
-  /* ================= SECTIONS ================= */
-  section{ padding:110px 32px; max-width:1180px; margin:0 auto; position:relative; }
-  @media (max-width:800px){ section{ padding:76px 18px; } }
-
-  .section-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:56px; flex-wrap:wrap; }
-  .section-head .kicker{ color:var(--gold); font-size:0.62rem; letter-spacing:0.12em; display:block; margin-bottom:12px; }
-  .section-head h2{ font-size:clamp(1.7rem,3.2vw,2.5rem); text-transform:uppercase; }
-  .section-head p{ max-width:340px; opacity:0.65; font-size:0.9rem; }
-
-  /* ---------------- CRAFTING GRID (features) ---------------- */
-  .crafting-wrap{
-    display:flex; align-items:center; justify-content:center; gap:30px; flex-wrap:wrap;
-  }
-  .crafting-grid{
-    display:grid; grid-template-columns:repeat(3, 74px); grid-template-rows:repeat(3, 74px);
-    gap:6px; background:var(--panel); padding:14px; border:3px solid var(--ink);
-    box-shadow:inset -4px -4px 0 rgba(0,0,0,0.3), inset 4px 4px 0 rgba(255,255,255,0.05);
-  }
-  .slot-item{
-    position:relative; width:74px; height:74px; background:var(--slot);
-    border:2px solid #111; display:flex; align-items:center; justify-content:center;
+  .ip-box .copy-btn{
+    background:var(--king);
+    color:#1c1300;
+    border:2px solid var(--king-deep);
+    font-weight:800;
+    font-size:12.5px;
+    padding:9px 14px;
     cursor:pointer;
   }
-  .slot-item:hover{ background:var(--slot-light); }
-  .slot-item svg{ width:40px; height:40px; }
-  .slot-item.empty{ opacity:0.3; }
+  .ip-box .copy-btn:hover{ filter:brightness(1.08); }
+  .ip-box .copy-btn.copied{ background:var(--vip); border-color:var(--vip-deep); color:#062229; }
+  .bedrock-btn{ background:var(--god); color:#160a33; border-color:var(--god-deep); }
+  .bedrock-btn:hover{ filter:brightness(1.08); }
 
-  .tooltip{
-    position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%) translateY(6px);
-    background:#100010; border:2px solid var(--gold); padding:10px 12px; width:200px;
-    font-size:0.72rem; opacity:0; pointer-events:none; transition:opacity 0.15s, transform 0.15s; z-index:40;
-    box-shadow:4px 4px 0 rgba(0,0,0,0.6);
+  .platforms{
+    display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
+    margin-bottom:8px;
   }
-  .slot-item:hover .tooltip{ opacity:1; transform:translateX(-50%) translateY(0); }
-  .tooltip .t-name{ color:var(--gold); font-size:0.72rem; margin-bottom:6px; display:block; }
-  .tooltip .t-desc{ color:var(--stone); line-height:1.5; }
-  .tooltip.rare .t-name{ color:var(--aqua); }
-  .tooltip.uncommon .t-name{ color:var(--xp); }
-
-  .arrow-result{ display:flex; align-items:center; gap:16px; }
-  .arrow{ font-size:2.2rem; color:var(--stone); }
-  .result-slot{
-    width:88px; height:88px; background:var(--slot); border:3px solid var(--gold);
-    display:flex; align-items:center; justify-content:center; position:relative;
-    box-shadow:0 0 16px rgba(255,213,61,0.35);
+  .platform-chip{
+    display:flex; align-items:center; gap:8px;
+    font-size:12.5px; font-weight:600;
+    color:var(--text);
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    padding:8px 14px;
   }
-  .result-slot svg{ width:52px; height:52px; }
-
-  @media (max-width:700px){
-    .crafting-wrap{ flex-direction:column; }
-    .arrow{ transform:rotate(90deg); }
+  .platform-chip .dot{
+    width:8px; height:8px;
+    background:var(--vip);
   }
-
-  /* ---------------- RECIPE STEPS (join) ---------------- */
-  .join{ background:var(--panel); }
-  .recipe-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-  @media (max-width:800px){ .recipe-steps{ grid-template-columns:1fr; } }
-  .recipe-card{ background:var(--void); border:2px solid #000; padding:24px 20px; position:relative; }
-  .recipe-card .step-num{ position:absolute; top:-14px; left:16px; background:var(--gold); color:var(--ink); font-size:0.7rem; padding:4px 8px; border:2px solid var(--ink); }
-  .recipe-card h3{ margin:10px 0 8px; font-size:1rem; text-transform:uppercase; }
-  .recipe-card p{ font-size:0.85rem; opacity:0.65; line-height:1.5; }
-
-  /* ---------------- BANNED ITEMS (rules) ---------------- */
-  .banned-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
-  @media (max-width:700px){ .banned-grid{ grid-template-columns:1fr; } }
-  .banned-item{ display:flex; gap:16px; align-items:flex-start; background:var(--panel); border:2px solid #000; padding:18px; }
-  .banned-icon{ position:relative; width:36px; height:36px; flex-shrink:0; background:var(--slot); border:2px solid var(--ink); }
-  .banned-icon::before, .banned-icon::after{ content:""; position:absolute; top:50%; left:6%; width:88%; height:4px; background:var(--redstone); }
-  .banned-icon::before{ transform:translateY(-50%) rotate(45deg); }
-  .banned-icon::after{ transform:translateY(-50%) rotate(-45deg); }
-  .banned-item h4{ font-size:0.92rem; margin-bottom:4px; text-transform:uppercase; }
-  .banned-item p{ font-size:0.82rem; opacity:0.6; line-height:1.5; }
-
-  /* ---------------- TEAM (item frames) ---------------- */
-  .frame-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
-  @media (max-width:800px){ .frame-grid{ grid-template-columns:repeat(2,1fr); } }
-  .item-frame{ text-align:center; }
-  .frame-box{
-    aspect-ratio:1; background:var(--panel); border:6px solid var(--dirt);
-    box-shadow:inset 0 0 0 3px var(--ink), inset -4px -4px 0 rgba(0,0,0,0.3);
-    display:flex; align-items:center; justify-content:center; margin-bottom:12px;
-    position:relative; overflow:hidden;
+  .platform-chip.bedrock .dot{ background:var(--god); }
+  .hero p.sub{
+    max-width:520px;
+    margin:0 auto 36px;
+    color:var(--muted);
+    font-size:17px;
   }
-  .nametag{ display:inline-block; background:rgba(0,0,0,0.75); border:1px solid var(--ink); padding:3px 8px; font-size:0.62rem; color:var(--xp); margin-bottom:4px; }
-  .item-frame .role{ font-size:0.68rem; color:var(--gold); text-transform:uppercase; letter-spacing:0.05em; }
-
-  /* ---------------- STATS STRIP ---------------- */
-  .stats{ display:grid; grid-template-columns:repeat(4,1fr); border-top:2px solid var(--slot); border-bottom:2px solid var(--slot); }
-  .stat{ padding:26px 16px; border-left:2px solid var(--slot); text-align:center; }
-  .stat:first-child{ border-left:none; }
-  .stat .num{ font-family:'VT323', monospace; font-size:2.4rem; color:var(--gold); line-height:1; }
-  .stat .label{ font-size:0.62rem; opacity:0.6; letter-spacing:0.06em; margin-top:6px; }
-  @media (max-width:700px){ .stats{ grid-template-columns:repeat(2,1fr); } .stat:nth-child(3){ border-left:none; } }
-
-  /* ================= FOOTER "QUIT TO TITLE" ================= */
-  footer{ background:var(--void); padding:70px 32px 100px; border-top:3px solid var(--slot); text-align:center; }
-  footer h3{ font-size:clamp(1.5rem,3vw,2.2rem); text-transform:uppercase; margin-bottom:24px; }
-  .footer-socials{ display:flex; gap:14px; justify-content:center; margin-top:28px; flex-wrap:wrap; }
-  .footer-bottom{ margin-top:50px; font-size:0.68rem; opacity:0.4; }
-
-  /* ================= HOTBAR NAV ================= */
-  #hotbar{
-    position:fixed; bottom:14px; left:50%; transform:translateX(-50%); z-index:500;
-    display:flex; gap:4px; background:rgba(20,20,24,0.9); padding:6px; border:3px solid var(--ink);
-    box-shadow:0 6px 0 rgba(0,0,0,0.4);
+  .hero-ctas{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  .btn{
+    display:inline-block;
+    padding:14px 26px;
+    font-weight:700;
+    font-size:15px;
+    text-decoration:none;
+    border:2px solid transparent;
   }
-  .hb-slot{
-    position:relative; width:52px; height:52px; background:var(--slot);
-    border:2px solid #050505; display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
+  .btn-primary{
+    background:var(--vip);
+    color:#062229;
+    border-color:var(--vip-deep);
+    box-shadow:4px 4px 0 var(--vip-deep);
   }
-  .hb-slot svg{ width:26px; height:26px; }
-  .hb-slot .kbd{ position:absolute; top:2px; left:3px; font-size:0.55rem; color:var(--stone); }
-  .hb-slot.active{ box-shadow:0 0 0 2px #fff, 0 0 10px rgba(255,255,255,0.5) inset; }
-  .hb-slot .hb-tooltip{
-    position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%) translateY(6px);
-    background:#100010; border:2px solid var(--gold); padding:6px 10px; white-space:nowrap;
-    font-size:0.66rem; color:var(--gold); opacity:0; pointer-events:none; transition:opacity 0.15s, transform 0.15s;
+  .btn-primary:hover{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--vip-deep); }
+  .btn-ghost{
+    background:transparent;
+    color:var(--text);
+    border-color:var(--panel-edge);
   }
-  .hb-slot:hover .hb-tooltip{ opacity:1; transform:translateX(-50%) translateY(0); }
-  @media (max-width:700px){
-    #hotbar{ bottom:8px; padding:4px; gap:3px; }
-    .hb-slot{ width:40px; height:40px; }
-    .hb-slot svg{ width:20px; height:20px; }
-    .hb-slot .kbd{ display:none; }
+  .btn-ghost:hover{ border-color:var(--muted); }
+
+  .hero-tags{
+    margin-top:44px;
+    display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+    font-size:12px; color:var(--muted-2);
+  }
+  .hero-tags span{
+    border:1px solid var(--panel-edge);
+    padding:6px 12px;
   }
 
-  @media (prefers-reduced-motion: reduce){
-    *{ transition:none !important; animation:none !important; }
+  /* ---------- SECTION HEADS ---------- */
+  .section{ padding:76px 0; }
+  .section-head{ text-align:center; margin-bottom:52px; }
+  .section-head h2{
+    font-size:clamp(20px, 3vw, 26px);
+    margin:0 0 12px;
+    letter-spacing:1px;
   }
-  a:focus-visible, button:focus-visible, .day-toggle:focus-visible, .hb-slot:focus-visible{
-    outline:2px solid var(--gold); outline-offset:2px;
+  .section-head p{ color:var(--muted); max-width:480px; margin:0 auto; font-size:15px;}
+
+  /* ---------- RANK CARDS ---------- */
+  .ranks-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:20px;
+  }
+  @media (max-width:920px){ .ranks-grid{ grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:560px){ .ranks-grid{ grid-template-columns:1fr;} }
+
+  .rank-card{
+    background:var(--panel);
+    border:2px solid var(--panel-edge);
+    padding:26px 22px 24px;
+    display:flex; flex-direction:column;
+    position:relative;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .rank-card:hover{
+    transform: translateY(-8px);
+  }
+  .rank-card .slot{
+    width:56px; height:56px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+    margin-bottom:18px;
+    border:2px solid var(--panel-edge);
+  }
+  .rank-card h3{
+    font-size:15px;
+    letter-spacing:1px;
+    margin:0 0 8px;
+  }
+  .rank-card .tagline{
+    color:var(--muted);
+    font-size:13.5px;
+    margin:0 0 18px;
+    min-height:38px;
+  }
+  .rank-card .price{
+    font-size:24px;
+    font-weight:800;
+    margin:0 0 18px;
+  }
+  .rank-card ul{
+    list-style:none; margin:0 0 22px; padding:0;
+    font-size:13.5px;
+    color:var(--text);
+    display:flex; flex-direction:column; gap:9px;
+  }
+  .rank-card ul li{ padding-left:16px; position:relative; }
+  .rank-card ul li::before{
+    content:"";
+    position:absolute; left:0; top:6px;
+    width:7px; height:7px;
+  }
+  .rank-card .buy{
+    margin-top:auto;
+    text-align:center;
+    padding:11px;
+    font-weight:700;
+    font-size:13px;
+    text-decoration:none;
+    border:2px solid transparent;
+  }
+
+  /* per-rank theming */
+  .rank-king .slot{ background:linear-gradient(135deg,var(--king),var(--king-deep)); }
+  .rank-king h3{ color:var(--king); }
+  .rank-king ul li::before{ background:var(--king); }
+  .rank-king .buy{ background:var(--king); color:#1c1300; border-color:var(--king-deep); }
+  .rank-king{ box-shadow: 0 0 0 1px var(--king-glow) inset; }
+  .rank-king:hover{ border-color:var(--king); box-shadow: 0 0 0 1px var(--king-glow) inset, 0 14px 34px -10px rgba(242,183,5,.45); }
+
+  .rank-god .slot{ background:linear-gradient(135deg,var(--god),var(--god-deep)); }
+  .rank-god h3{ color:var(--god); }
+  .rank-god ul li::before{ background:var(--god-bolt); }
+  .rank-god .buy{ background:var(--god); color:#160a33; border-color:var(--god-deep); }
+  .rank-god{ box-shadow: 0 0 0 1px var(--god-glow) inset; }
+  .rank-god:hover{ border-color:var(--god); box-shadow: 0 0 0 1px var(--god-glow) inset, 0 14px 34px -10px rgba(139,107,240,.45); }
+
+  .rank-vip .slot{ background:linear-gradient(135deg,var(--vip),var(--vip-deep)); }
+  .rank-vip h3{ color:var(--vip); }
+  .rank-vip ul li::before{ background:var(--vip); }
+  .rank-vip .buy{ background:var(--vip); color:#062229; border-color:var(--vip-deep); }
+  .rank-vip{ box-shadow: 0 0 0 1px var(--vip-glow) inset; }
+  .rank-vip:hover{ border-color:var(--vip); box-shadow: 0 0 0 1px var(--vip-glow) inset, 0 14px 34px -10px rgba(84,199,232,.45); }
+
+  .rank-dead .slot{ background:linear-gradient(135deg,var(--dead),var(--dead-deep)); }
+  .rank-dead h3{ color:var(--dead); }
+  .rank-dead ul li::before{ background:var(--dead); }
+  .rank-dead .buy{ background:var(--dead); color:#2a0b09; border-color:var(--dead-deep); }
+  .rank-dead{ box-shadow: 0 0 0 1px var(--dead-glow) inset; }
+  .rank-dead:hover{ border-color:var(--dead); box-shadow: 0 0 0 1px var(--dead-glow) inset, 0 14px 34px -10px rgba(211,69,58,.45); }
+
+  .most-picked{
+    position:absolute; top:-11px; right:18px;
+    background:var(--vip); color:#062229;
+    font-size:10.5px; font-weight:800;
+    padding:4px 10px;
+    border:2px solid var(--vip-deep);
+  }
+
+  /* ---------- HOW TO BUY ---------- */
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+  }
+  @media (max-width:800px){ .steps{ grid-template-columns:1fr; } }
+  .step{
+    background:var(--panel);
+    border:2px solid var(--panel-edge);
+    padding:26px 22px;
+  }
+  .step .num{
+    font-size:12px;
+    color:var(--muted-2);
+    margin-bottom:12px;
+    font-family:'Press Start 2P', monospace;
+  }
+  .step h3{ font-size:15.5px; margin:0 0 10px; }
+  .step p{ font-size:14px; color:var(--muted); margin:0; }
+
+  /* ---------- PERKS BAND ---------- */
+  .band{
+    background:var(--panel);
+    border-top:2px solid var(--panel-edge);
+    border-bottom:2px solid var(--panel-edge);
+    padding:34px 0;
+    text-align:center;
+  }
+  .band p{
+    margin:0;
+    font-size:15.5px;
+    color:var(--muted);
+  }
+  .band p strong{ color:var(--text); }
+
+  /* ---------- TEAM ---------- */
+  .team{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:700px){ .team{ grid-template-columns:1fr; } }
+  .team-card{
+    background:var(--panel);
+    border:2px solid var(--panel-edge);
+    padding:26px;
+    display:flex; align-items:center; gap:18px;
+  }
+  .team-avatar{
+    width:52px; height:52px;
+    flex:none;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:800;
+    border:2px solid var(--panel-edge);
+  }
+  .team-card:nth-child(1) .team-avatar{ background:linear-gradient(135deg,var(--king),var(--king-deep)); color:#1c1300; }
+  .team-card:nth-child(2) .team-avatar{ background:linear-gradient(135deg,var(--vip),var(--vip-deep)); color:#062229; }
+  .team-card:nth-child(3) .team-avatar{ background:linear-gradient(135deg,var(--god),var(--god-deep)); color:#160a33; }
+  .team-avatar.avatar-img{ background:var(--panel-edge); padding:0; overflow:hidden; }
+  .team-avatar.avatar-img img{
+    width:100%; height:100%;
+    object-fit:cover;
+    object-position:center 20%;
+    image-rendering:pixelated;
+  }
+  .team-role{ font-size:11.5px; color:var(--muted-2); letter-spacing:1px; margin-bottom:4px; }
+  .team-name{ font-size:16px; font-weight:700; }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:2px solid var(--panel-edge);
+    padding:44px 0 36px;
+  }
+  .footer-row{
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:16px;
+  }
+  .footer-note{ color:var(--muted-2); font-size:13px; max-width:480px; }
+  .discord-btn{
+    background:var(--god);
+    color:#160a33;
+    padding:12px 22px;
+    font-weight:700;
+    font-size:14px;
+    text-decoration:none;
+    border:2px solid var(--god-deep);
+    box-shadow:3px 3px 0 var(--god-deep);
+  }
+  .discord-btn:hover{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--god-deep); }
+  .fine-print{
+    margin-top:28px;
+    font-size:12px;
+    color:var(--muted-2);
+    text-align:center;
   }
 </style>
 </head>
 <body>
 
-<div class="crt"></div>
-<div class="vignette"></div>
-<div class="cursor-block" id="cursorBlock"></div>
+<nav>
+  <div class="wrap">
+    <div class="brand pixel">
+      <div class="brand-block"></div>
+      GAMING MC
+    </div>
+    <div class="nav-links">
+      <a href="#ranks">Ranks</a>
+      <a href="#how">How to buy</a>
+      <a href="#team">Team</a>
+    </div>
+    <a class="nav-cta" href="https://discord.gg/9R2GRSCcPz" target="_blank" rel="noopener">Join Discord</a>
+  </div>
+</nav>
 
-<div id="loader">
-  <div class="loader-title pixel" style="font-size:1rem;">GAMING MC</div>
-  <div class="loader-bar-frame"><div class="loader-bar-fill" id="loaderFill"></div></div>
-  <div class="loader-tip mono" id="loaderTip">Loading terrain...</div>
+<div class="ticker">
+  <div class="ticker-track">
+    <span>🔥 KING RANK — ₹399</span>
+    <span>⚡ GOD RANK — ₹299</span>
+    <span>💎 VIP RANK — ₹199</span>
+    <span>💀 DEADLIEST RANK — ₹100</span>
+    <span>🎮 IP: GamingMC.minecraftr.us:19100</span>
+    <span>🔥 KING RANK — ₹399</span>
+    <span>⚡ GOD RANK — ₹299</span>
+    <span>💎 VIP RANK — ₹199</span>
+    <span>💀 DEADLIEST RANK — ₹100</span>
+    <span>🎮 IP: GamingMC.minecraftr.us:19100</span>
+  </div>
 </div>
 
-<div id="xpbar"><div id="xpfill"></div></div>
-<div id="levelBubble" class="pixel">LV 1</div>
+<header class="hero grid-bg">
+  <div class="floaters" id="floaters"></div>
+  <div class="wrap hero-inner">
+    <h1 class="pixel">Rank up on <span class="g">Gaming MC</span></h1>
+    <p class="sub">Kits, tags, extra homes, and a bit of bragging rights. Pick the rank that matches how you play, then open a ticket to get set up.</p>
 
-<div id="joinlog" class="mono"></div>
-<div class="toast-stack" id="toastStack"></div>
-
-<header class="hero day" id="hero">
-  <div class="day-toggle" id="dayToggle" role="button" tabindex="0" aria-label="Toggle day and night">
-    <div class="lever"></div><span id="toggleLabel">DAY</span>
-  </div>
-
-  <div class="celestial sun" id="celestial"></div>
-  <div class="stars" id="stars"></div>
-
-  <div class="hero-content">
-    <span class="eyebrow pixel">JAVA · 1.21+ · VANILLA+</span>
-    <h1 class="glitch-title" id="heroTitle" onmouseenter="glitchTitle(this)">GAMING MC</h1>
-    <p class="tagline">A survival world that remembers what you build. Claim your land, run the market, and make it to the next sunrise.</p>
-
-    <div class="hud-stats">
-      <div class="hud-stat">
-        <span class="hud-label pixel">SERVER HEALTH</span>
-        <div class="icon-row" id="heartRow"></div>
-      </div>
-      <div class="hud-stat">
-        <span class="hud-label pixel">POPULATION</span>
-        <div class="icon-row" id="drumRow"></div>
-      </div>
+    <div class="platforms">
+      <div class="platform-chip java"><span class="dot"></span> Java Edition</div>
+      <div class="platform-chip bedrock"><span class="dot"></span> Bedrock Edition (cross-play)</div>
     </div>
 
     <div class="ip-row">
-      <div class="ip-box mono">play.gamingmc.net<button onclick="copyIP()">COPY</button></div>
-      <button class="mc-btn primary" onclick="document.getElementById('features').scrollIntoView()">HOW TO JOIN →</button>
+      <div class="ip-box">
+        <div>
+          <span class="ip-label">JAVA EDITION — IP : PORT</span>
+          <span class="ip-text" id="ip-text-java">GamingMC.minecraftr.us:19100</span>
+        </div>
+        <button class="copy-btn" id="copy-btn-java" onclick="copyIP('java')">Copy</button>
+      </div>
+
+      <div class="ip-box bedrock-box">
+        <div>
+          <span class="ip-label">BEDROCK EDITION</span>
+          <span class="ip-text" id="ip-text-bedrock">IP: GamingMC.minecraftr.us</span>
+          <span class="ip-text ip-port">PORT: 19100</span>
+        </div>
+        <button class="copy-btn bedrock-btn" id="copy-btn-bedrock" onclick="copyIP('bedrock')">Copy</button>
+      </div>
+    </div>
+
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#ranks">See ranks</a>
+      <a class="btn btn-ghost" href="https://discord.gg/9R2GRSCcPz" target="_blank" rel="noopener">Open the Discord</a>
+    </div>
+    <div class="hero-tags">
+      <span>4 rank tiers</span>
+      <span>Ticket-based purchase</span>
+      <span>Ranks applied same day</span>
     </div>
   </div>
-
-  <div class="terrain" id="terrain"></div>
 </header>
 
-<section class="stats">
-  <div class="stat"><div class="num">128</div><div class="label pixel">PLAYERS</div></div>
-  <div class="stat"><div class="num">742</div><div class="label pixel">DAYS SURVIVED</div></div>
-  <div class="stat"><div class="num">99.8%</div><div class="label pixel">UPTIME</div></div>
-  <div class="stat"><div class="num">24/7</div><div class="label pixel">ONLINE</div></div>
-</section>
-
-<section id="features">
-  <div class="section-head">
-    <div><span class="kicker pixel">CRAFTING TABLE</span><h2>What's in the world</h2></div>
-    <p>Hover a slot. No resets, no pay-to-win — just a world that grows with the people playing in it.</p>
+<div class="band">
+  <div class="wrap">
+    <p>Every rank includes a <strong>chat tag</strong>, a <strong>rank-specific kit</strong>, and <strong>extra home slots</strong> — higher tiers stack more on top.</p>
   </div>
+</div>
 
-  <div class="crafting-wrap">
-    <div class="crafting-grid">
-      <div class="slot-item">
-        <svg viewBox="0 0 36 36"><rect x="4" y="16" width="28" height="16" fill="#6a9c3d" stroke="#0d0d0f" stroke-width="2"/><rect x="14" y="6" width="8" height="10" fill="#7a5236" stroke="#0d0d0f" stroke-width="2"/></svg>
-        <div class="tooltip common"><span class="t-name">Land Claims</span><span class="t-desc">Mark your plot, keep griefers out. No admin ticket needed.</span></div>
-      </div>
-      <div class="slot-item">
-        <svg viewBox="0 0 36 36"><polygon points="18,4 30,14 24,32 12,32 6,14" fill="#ffd53d" stroke="#0d0d0f" stroke-width="2"/></svg>
-        <div class="tooltip uncommon"><span class="t-name">Player Economy</span><span class="t-desc">Sell what you mine. Shops run by players, not plugins.</span></div>
-      </div>
-      <div class="slot-item">
-        <svg viewBox="0 0 36 36"><rect x="6" y="6" width="24" height="24" fill="#3bf7ff" stroke="#0d0d0f" stroke-width="2"/></svg>
-        <div class="tooltip rare"><span class="t-name">Custom Enchants</span><span class="t-desc">Hand-tuned enchantments that reward long survival, not luck.</span></div>
-      </div>
-      <div class="slot-item">
-        <svg viewBox="0 0 36 36"><rect x="8" y="4" width="20" height="28" fill="#9a9a92" stroke="#0d0d0f" stroke-width="2"/></svg>
-        <div class="tooltip common"><span class="t-name">Seasonal Events</span><span class="t-desc">Boss raids, build contests, PvP tournaments every other week.</span></div>
-      </div>
-      <div class="slot-item empty"></div>
-      <div class="slot-item">
-        <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="13" fill="none" stroke="#6a9c3d" stroke-width="3"/><path d="M18 8 L18 18 L25 22" stroke="#ffd53d" stroke-width="3" fill="none"/></svg>
-        <div class="tooltip common"><span class="t-name">Player Warps</span><span class="t-desc">Set a public warp to your build so the server can find it.</span></div>
-      </div>
-      <div class="slot-item empty"></div>
-      <div class="slot-item">
-        <svg viewBox="0 0 36 36"><rect x="6" y="10" width="24" height="18" fill="#7a5236" stroke="#0d0d0f" stroke-width="2"/><circle cx="18" cy="8" r="5" fill="#e7c9a9" stroke="#0d0d0f" stroke-width="2"/></svg>
-        <div class="tooltip uncommon"><span class="t-name">Active Staff</span><span class="t-desc">Real moderators. Reports get a reply within the hour.</span></div>
-      </div>
-      <div class="slot-item empty"></div>
+<section class="section" id="ranks">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 class="pixel">Choose your rank</h2>
+      <p>Prices are one-time. Higher ranks include everything from the tiers below them.</p>
     </div>
 
-    <div class="arrow-result">
-      <span class="arrow">→</span>
-      <div class="result-slot">
-        <svg viewBox="0 0 36 36"><rect x="4" y="4" width="28" height="28" fill="#ff2f2f" stroke="#0d0d0f" stroke-width="2"/><rect x="12" y="12" width="12" height="12" fill="#ffd53d"/></svg>
+    <div class="ranks-grid">
+
+      <div class="rank-card rank-king">
+        <div class="slot">👑</div>
+        <h3>KING</h3>
+        <p class="tagline">Top of the server, in every sense.</p>
+        <div class="price">₹399</div>
+        <ul>
+          <li>[KING] gold chat tag</li>
+          <li>/fly access anywhere</li>
+          <li>Exclusive King kit every 24h</li>
+          <li>+2 extra home slots</li>
+          <li>Priority queue on join</li>
+        </ul>
+        <a class="buy" href="https://discord.gg/9R2GRSCcPz" target="_blank" rel="noopener">Open a ticket</a>
+      </div>
+
+      <div class="rank-card rank-god">
+        <span class="most-picked">POPULAR</span>
+        <div class="slot">⚡</div>
+        <h3>GOD</h3>
+        <p class="tagline">Command respect, and a little bit of the console.</p>
+        <div class="price">₹299</div>
+        <ul>
+          <li>[GOD] chat tag with lightning color</li>
+          <li>/heal and /feed commands</li>
+          <li>Particle trail effect</li>
+          <li>+1 extra home slot</li>
+          <li>Access to the GOD-only kit</li>
+        </ul>
+        <a class="buy" href="https://discord.gg/9R2GRSCcPz" target="_blank" rel="noopener">Open a ticket</a>
+      </div>
+
+      <div class="rank-card rank-vip">
+        <div class="slot">💎</div>
+        <h3>VIP</h3>
+        <p class="tagline">The essentials, done properly.</p>
+        <div class="price">₹199</div>
+        <ul>
+          <li>[VIP] chat tag</li>
+          <li>Colored name in chat</li>
+          <li>/kit vip every 12h</li>
+          <li>+1 extra home slot</li>
+        </ul>
+        <a class="buy" href="https://discord.gg/9R2GRSCcPz" target="_blank" rel="noopener">Open a ticket</a>
+      </div>
+
+      <div class="rank-card rank-dead">
+        <div class="slot">💀</div>
+        <h3>DEADLIEST</h3>
+        <p class="tagline">Cheapest way in, still a real upgrade.</p>
+        <div class="price">₹100</div>
+        <ul>
+          <li>[DEADLIEST] chat tag</li>
+          <li>/kit starter</li>
+          <li>+1 home slot</li>
+          <li>Priority replies in ticket support</li>
+        </ul>
+        <a class="buy" href="https://discord.gg/9R2GRSCcPz" target="_blank" rel="noopener">Open a ticket</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="section grid-bg" id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 class="pixel">How to buy</h2>
+      <p>Every purchase goes through a ticket, so staff can confirm your username and payment.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">01</div>
+        <h3>Open a ticket</h3>
+        <p>Join the Discord and open a ticket in the rank-store channel.</p>
+      </div>
+      <div class="step">
+        <div class="num">02</div>
+        <h3>Pick your rank</h3>
+        <p>Tell staff which rank you want — they'll confirm the price and payment method.</p>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <h3>Pay and get ranked up</h3>
+        <p>Send payment, staff verifies it, and your rank is applied the same day.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="join" class="join">
-  <div class="section-head">
-    <div><span class="kicker pixel">RECIPE</span><h2>Three steps to spawn</h2></div>
-    <p>Java Edition only, 1.21+. No whitelist, no application form.</p>
-  </div>
-  <div class="recipe-steps">
-    <div class="recipe-card"><span class="step-num pixel">01</span><h3>Open Minecraft</h3><p>Launch Java Edition and select Multiplayer from the main menu.</p></div>
-    <div class="recipe-card"><span class="step-num pixel">02</span><h3>Add the server</h3><p>Click "Add Server" and paste in the address below.</p></div>
-    <div class="recipe-card"><span class="step-num pixel">03</span><h3>Enter the world</h3><p>Double-click Gaming MC in your list. You'll spawn at the town hub.</p></div>
-  </div>
-  <div class="ip-row" style="margin-top:32px;">
-    <div class="ip-box mono">play.gamingmc.net<button onclick="copyIP()">COPY</button></div>
-  </div>
-</section>
-
-<section id="rules">
-  <div class="section-head">
-    <div><span class="kicker pixel">INVENTORY: RESTRICTED</span><h2>Banned items</h2></div>
-    <p>Short list, strictly kept. Breaking these gets you muted, banned, or worse.</p>
-  </div>
-  <div class="banned-grid">
-    <div class="banned-item"><div class="banned-icon"></div><div><h4>Griefing</h4><p>Don't destroy or steal from builds that aren't yours.</p></div></div>
-    <div class="banned-item"><div class="banned-icon"></div><div><h4>Hacked Clients</h4><p>X-ray, killaura, fly hacks are bannable on first offense.</p></div></div>
-    <div class="banned-item"><div class="banned-icon"></div><div><h4>Disrespect</h4><p>Hate speech and harassment aren't tolerated in chat or voice.</p></div></div>
-    <div class="banned-item"><div class="banned-icon"></div><div><h4>Spam & Ads</h4><p>That includes other servers, Discords, and IP grabbers.</p></div></div>
-  </div>
-</section>
-
-<section id="team">
-  <div class="section-head">
-    <div><span class="kicker pixel">ITEM FRAMES</span><h2>The team</h2></div>
-    <p>Reach any of them in-game or on Discord if something needs attention.</p>
-  </div>
-  <div class="frame-grid">
-    <div class="item-frame"><div class="frame-box"><svg viewBox="0 0 100 100" width="70%"><rect width="100" height="100" fill="#6a9c3d"/><rect x="30" y="20" width="40" height="40" fill="#e7c9a9"/></svg></div><span class="nametag mono">Aster</span><div class="role">Owner</div></div>
-    <div class="item-frame"><div class="frame-box"><svg viewBox="0 0 100 100" width="70%"><rect width="100" height="100" fill="#3bf7ff"/><rect x="30" y="20" width="40" height="40" fill="#e7c9a9"/></svg></div><span class="nametag mono">Rowan</span><div class="role">Admin</div></div>
-    <div class="item-frame"><div class="frame-box"><svg viewBox="0 0 100 100" width="70%"><rect width="100" height="100" fill="#ffd53d"/><rect x="30" y="20" width="40" height="40" fill="#e7c9a9"/></svg></div><span class="nametag mono">Kit</span><div class="role">Moderator</div></div>
-    <div class="item-frame"><div class="frame-box"><svg viewBox="0 0 100 100" width="70%"><rect width="100" height="100" fill="#9a9a92"/><rect x="30" y="20" width="40" height="40" fill="#e7c9a9"/></svg></div><span class="nametag mono">Finch</span><div class="role">Builder</div></div>
+<section class="section" id="team">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 class="pixel">Run by</h2>
+      <p>The people behind Gaming MC.</p>
+    </div>
+    <div class="team">
+      <div class="team-card">
+        <div class="team-avatar avatar-img"><img src="chirag-avatar.png" alt="Chirag"></div>
+        <div>
+          <div class="team-role">OWNER</div>
+          <div class="team-name">Chirag</div>
+        </div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">GX</div>
+        <div>
+          <div class="team-role">CO-OWNER</div>
+          <div class="team-name">Gaming X</div>
+        </div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">CR</div>
+        <div>
+          <div class="team-role">DEVELOPER</div>
+          <div class="team-name">Crimson</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
 <footer>
-  <h3>Ready to place your first block?</h3>
-  <button class="mc-btn primary" onclick="document.getElementById('hero').scrollIntoView()">JOIN GAMING MC →</button>
-  <div class="footer-socials">
-    <button class="mc-btn">DISCORD</button>
-    <button class="mc-btn">YOUTUBE</button>
-    <button class="mc-btn">VOTE</button>
+  <div class="wrap">
+    <div class="footer-row">
+      <p class="footer-note">Questions about a rank, a payment, or something not working? Open a ticket on the Discord and staff will help you directly.</p>
+      <a class="discord-btn" href="https://discord.gg/9R2GRSCcPz" target="_blank" rel="noopener">discord.gg/9R2GRSCcPz</a>
+    </div>
+    <p class="fine-print">Gaming MC · Ranks are cosmetic and quality-of-life perks — no gameplay advantage beyond what's listed above.</p>
   </div>
-  <div class="footer-bottom mono">© 2026 Gaming MC · play.gamingmc.net · Not affiliated with Mojang or Microsoft</div>
 </footer>
 
-<nav id="hotbar">
-  <div class="hb-slot active" data-target="hero" data-name="Home"><span class="kbd">1</span><svg viewBox="0 0 36 36"><rect x="4" y="16" width="28" height="16" fill="#6a9c3d"/><rect x="14" y="6" width="8" height="10" fill="#7a5236"/></svg><div class="hb-tooltip">Home</div></div>
-  <div class="hb-slot" data-target="features" data-name="Features"><span class="kbd">2</span><svg viewBox="0 0 36 36"><rect x="6" y="6" width="10" height="10" fill="#ffd53d"/><rect x="20" y="6" width="10" height="10" fill="#3bf7ff"/><rect x="6" y="20" width="10" height="10" fill="#6a9c3d"/><rect x="20" y="20" width="10" height="10" fill="#9a9a92"/></svg><div class="hb-tooltip">Features</div></div>
-  <div class="hb-slot" data-target="join" data-name="Join"><span class="kbd">3</span><svg viewBox="0 0 36 36"><rect x="10" y="4" width="16" height="28" fill="#7a5236" stroke="#0d0d0f" stroke-width="2"/></svg><div class="hb-tooltip">How to Join</div></div>
-  <div class="hb-slot" data-target="rules" data-name="Rules"><span class="kbd">4</span><svg viewBox="0 0 36 36"><rect x="6" y="4" width="24" height="28" fill="#e8dfc8" stroke="#0d0d0f" stroke-width="2"/><rect x="10" y="10" width="16" height="2" fill="#0d0d0f"/><rect x="10" y="16" width="16" height="2" fill="#0d0d0f"/><rect x="10" y="22" width="10" height="2" fill="#0d0d0f"/></svg><div class="hb-tooltip">Rules</div></div>
-  <div class="hb-slot" data-target="team" data-name="Team"><span class="kbd">5</span><svg viewBox="0 0 36 36"><rect x="8" y="8" width="20" height="20" fill="#3bf7ff" stroke="#0d0d0f" stroke-width="2"/><rect x="13" y="13" width="10" height="10" fill="#e7c9a9"/></svg><div class="hb-tooltip">Team</div></div>
-</nav>
-
 <script>
-  /* ---------------- LOADER ---------------- */
-  const tips = [
-    "Loading terrain...",
-    "Placing torches so mobs don't spawn...",
-    "Generating villages...",
-    "Cooking achievements...",
-    "Sharpening diamond swords...",
-    "Filling chests with loot..."
-  ];
-  const loaderFill = document.getElementById('loaderFill');
-  const loaderTip = document.getElementById('loaderTip');
-  let pct = 0;
-  loaderTip.textContent = tips[0];
-  const tipInterval = setInterval(() => {
-    loaderTip.textContent = tips[Math.floor(Math.random()*tips.length)];
-  }, 450);
-  const loadInterval = setInterval(() => {
-    pct += 4 + Math.random()*8;
-    if(pct >= 100){
-      pct = 100;
-      clearInterval(loadInterval);
-      clearInterval(tipInterval);
-      setTimeout(() => {
-        document.getElementById('loader').classList.add('hide');
-        startJoinLog();
-      }, 250);
+  function copyIP(which){
+    let text;
+    if(which === 'bedrock'){
+      const ipLine = document.getElementById('ip-text-bedrock').textContent;
+      const portLine = document.querySelector('.bedrock-box .ip-port').textContent;
+      text = ipLine + '  ' + portLine;
+    } else {
+      text = document.getElementById('ip-text-' + which).textContent;
     }
-    loaderFill.style.width = pct + '%';
-  }, 140);
-
-  /* ---------------- JOIN LOG ---------------- */
-  function startJoinLog(){
-    const names = ['Chirag','Rudra','Kit','Finch','You'];
-    const log = document.getElementById('joinlog');
-    names.forEach((n, i) => {
+    const btn = document.getElementById('copy-btn-' + which);
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
       setTimeout(() => {
-        const line = document.createElement('span');
-        line.textContent = `${n} joined the game`;
-        line.classList.add('show');
-        log.appendChild(line);
-        setTimeout(() => line.remove(), 6000);
-      }, i * 700);
+        btn.textContent = original;
+        btn.classList.remove('copied');
+      }, 1600);
     });
   }
 
-  /* ---------------- XP BAR / LEVEL ---------------- */
-  const xpfill = document.getElementById('xpfill');
-  const levelBubble = document.getElementById('levelBubble');
-  function updateXP(){
-    const scrollPct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-    const pctClamped = Math.min(Math.max(scrollPct, 0), 1);
-    xpfill.style.width = (pctClamped*100) + '%';
-    levelBubble.style.left = (pctClamped*100) + '%';
-    levelBubble.textContent = 'LV ' + (1 + Math.floor(pctClamped*30));
-  }
-  window.addEventListener('scroll', updateXP);
-  updateXP();
-
-  /* ---------------- HUD hearts / hunger ---------------- */
-  const heartRow = document.getElementById('heartRow');
-  const drumRow = document.getElementById('drumRow');
-  for(let i=0;i<10;i++){ const h=document.createElement('div'); h.className='heart'; heartRow.appendChild(h); }
-  for(let i=0;i<10;i++){ const d=document.createElement('div'); d.className='drum'; if(i>7) d.style.opacity='0.3'; drumRow.appendChild(d); }
-
-  /* ---------------- Terrain + trees ---------------- */
-  const terrain = document.getElementById('terrain');
-  const heights = [30,45,60,50,70,85,65,55,75,90,80,60,45,55,70,85,95,75,60,50,65,80,70,55,40,50,65,55,45,60];
-  heights.forEach((h,i)=>{
-    const col=document.createElement('div'); col.className='col'; col.style.height=h+'%';
-    if(i%5===2 && h>55){ const t=document.createElement('div'); t.className='tree'; t.innerHTML='<div class="leaves"></div><div class="trunk"></div>'; col.appendChild(t); }
-    terrain.appendChild(col);
-  });
-
-  /* ---------------- Stars ---------------- */
-  const starsEl = document.getElementById('stars');
-  for(let i=0;i<60;i++){ const s=document.createElement('div'); s.className='star'; s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*55+'%'; s.style.opacity=(Math.random()*0.6+0.4).toFixed(2); starsEl.appendChild(s); }
-
-  /* ---------------- Day / night ---------------- */
-  const hero=document.getElementById('hero'), toggle=document.getElementById('dayToggle'), label=document.getElementById('toggleLabel'), celestial=document.getElementById('celestial');
-  let night=false;
-  function setMode(isNight){
-    hero.classList.toggle('night', isNight); hero.classList.toggle('day', !isNight);
-    celestial.classList.toggle('sun', !isNight); celestial.classList.toggle('moon', isNight);
-    label.textContent = isNight ? 'NIGHT' : 'DAY';
-  }
-  function flip(){ night=!night; setMode(night); }
-  toggle.addEventListener('click', flip);
-  toggle.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); }});
-
-  /* ---------------- Cursor ---------------- */
-  const cursorBlock=document.getElementById('cursorBlock');
-  window.addEventListener('mousemove', e=>{ cursorBlock.style.left=e.clientX+'px'; cursorBlock.style.top=e.clientY+'px'; });
-
-  /* ---------------- Glitch title ---------------- */
-  function glitchTitle(el){ el.classList.add('glitching'); setTimeout(()=>el.classList.remove('glitching'),350); }
-
-  /* ---------------- Toasts ---------------- */
-  function showToast(title, sub){
-    const stack=document.getElementById('toastStack');
-    const t=document.createElement('div'); t.className='toast';
-    t.innerHTML=`<div class="icon"></div><div><b>${title}</b>${sub}</div>`;
-    stack.appendChild(t); setTimeout(()=>t.remove(),3500);
-  }
-  setTimeout(()=>showToast('Achievement get!','Website Loaded'), 2200);
-  const seen={};
-  const achievementSections={features:'Feature Explorer', join:'Ready To Spawn', rules:'Read The Rules', team:'Met The Team'};
-  const obs=new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-      const id=entry.target.id;
-      if(entry.isIntersecting && !seen[id] && achievementSections[id]){ seen[id]=true; showToast('Achievement get!', achievementSections[id]); }
-    });
-  }, {threshold:0.4});
-  Object.keys(achievementSections).forEach(id=>{ const el=document.getElementById(id); if(el) obs.observe(el); });
-
-  /* ---------------- Particle burst ---------------- */
-  const blockColors=['#6a9c3d','#ffd53d','#3bf7ff','#9a9a92','#ff2f2f','#7a5236'];
-  function burst(x,y,count){
+  (function(){
+    const container = document.getElementById('floaters');
+    const colors = ['#f2b705', '#8b6bf0', '#54c7e8', '#d3453a'];
+    const count = 16;
     for(let i=0;i<count;i++){
-      const p=document.createElement('div'); p.className='particle';
-      p.style.left=x+'px'; p.style.top=y+'px';
-      p.style.background=blockColors[Math.floor(Math.random()*blockColors.length)];
-      const angle=Math.random()*Math.PI*2, dist=60+Math.random()*140;
-      p.style.setProperty('--fly', `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`);
-      p.style.animation='pop-fly 0.7s ease-out forwards';
-      document.body.appendChild(p); setTimeout(()=>p.remove(),750);
+      const s = document.createElement('span');
+      const left = Math.random()*100;
+      const size = 8 + Math.random()*10;
+      const dur = 8 + Math.random()*10;
+      const delay = Math.random()*10;
+      s.style.left = left+'%';
+      s.style.bottom = '-20px';
+      s.style.width = size+'px';
+      s.style.height = size+'px';
+      s.style.background = colors[i % colors.length];
+      s.style.animationDuration = dur+'s';
+      s.style.animationDelay = delay+'s';
+      container.appendChild(s);
     }
-  }
-  function copyIP(){
-    navigator.clipboard.writeText('play.gamingmc.net').then(()=>{
-      document.querySelectorAll('.ip-box button').forEach(b=>{ const old=b.textContent; b.textContent='COPIED'; setTimeout(()=>b.textContent=old,1500); });
-      burst(window.innerWidth/2, window.innerHeight/2, 18);
-      showToast('Achievement get!','IP Copied To Clipboard');
-    });
-  }
-  document.querySelectorAll('.mc-btn.primary').forEach(btn=>{
-    btn.addEventListener('click', e=>burst(e.clientX, e.clientY, 16));
-  });
-
-  /* ---------------- Falling TNT ---------------- */
-  function dropTNT(){
-    const tnt=document.createElement('div'); tnt.className='tnt'; tnt.style.left=Math.random()*90+'%';
-    tnt.style.animationDuration=(4+Math.random()*3)+'s';
-    hero.appendChild(tnt); tnt.addEventListener('animationend', ()=>tnt.remove());
-  }
-  setInterval(dropTNT, 3500); dropTNT();
-
-  /* ---------------- Hotbar nav + number keys ---------------- */
-  const hbSlots = document.querySelectorAll('.hb-slot');
-  function activateSlot(slot){
-    hbSlots.forEach(s=>s.classList.remove('active'));
-    slot.classList.add('active');
-    const target=document.getElementById(slot.dataset.target);
-    if(target) target.scrollIntoView({behavior:'smooth'});
-  }
-  hbSlots.forEach((slot,i)=>{
-    slot.addEventListener('click', ()=>activateSlot(slot));
-  });
-  window.addEventListener('keydown', e=>{
-    const n=parseInt(e.key);
-    if(n>=1 && n<=hbSlots.length){ activateSlot(hbSlots[n-1]); }
-  });
-
-  /* highlight hotbar slot on scroll */
-  const sectionIds=['hero','features','join','rules','team'];
-  const sectionObs=new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-      if(entry.isIntersecting){
-        const match=[...hbSlots].find(s=>s.dataset.target===entry.target.id);
-        if(match){ hbSlots.forEach(s=>s.classList.remove('active')); match.classList.add('active'); }
-      }
-    });
-  }, {threshold:0.5});
-  sectionIds.forEach(id=>{ const el=document.getElementById(id); if(el) sectionObs.observe(el); });
+  })();
 </script>
-
 </body>
 </html>
